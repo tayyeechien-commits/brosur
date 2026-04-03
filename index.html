@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panduan Pembentangan Interaktif</title>
+    <style>
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #ff007a;
+            --dark-bg: #0a0b1e;
+            --scan-color: rgba(0, 212, 255, 0.3);
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+            perspective: 2000px;
+        }
+
+        /* 漂浮零件背景动画 */
+        .gear {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.07);
+            font-size: 5rem;
+            animation: rotate 15s linear infinite;
+            z-index: -1;
+            user-select: none;
+            filter: blur(1px);
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 手册主容器 */
+        .brochure {
+            width: 380px;
+            height: 540px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 10;
+        }
+
+        .brochure.open {
+            transform: rotateY(-180deg) !important;
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            border-radius: 25px;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,212,255,0.1);
+            border: 3px solid var(--primary-color);
+            overflow: hidden;
+        }
+
+        /* --- 封面 (FRONT) --- */
+        .cover {
+            background: linear-gradient(145deg, #16213e 0%, #0a0b1e 100%);
+            z-index: 2;
+            text-align: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .robot-icon {
+            font-size: 90px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 0 20px var(--primary-color));
+            animation: robotFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes robotFloat {
+            0%, 100% { transform: translateY(0) rotate(-5deg); }
+            50% { transform: translateY(-25px) rotate(5deg); }
+        }
+
+        /* 修复警告后的封面标题 */
+        h1 {
+            color: white;
+            font-size: 1.6rem;
+            margin-bottom: 40px;
+            line-height: 1.4;
+            background: linear-gradient(to right, #fff 20%, var(--primary-color) 40%, var(--primary-color) 60%, #fff 80%);
+            background-size: 200% auto;
+            -webkit-background-clip: text; /* 兼容前缀 */
+            background-clip: text;         /* 标准属性 - FIX! */
+            -webkit-text-fill-color: transparent;
+            animation: shine 4s linear infinite;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        .btn-read {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            position: relative;
+            z-index: 50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 0, 122, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 0, 122, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 0, 122, 0); }
+        }
+
+        .btn-read:hover {
+            transform: scale(1.1) rotate(2deg);
+            background: #ff3399;
+        }
+
+        /* --- 内页 (INSIDE) --- */
+        .inside {
+            background: #ffffff;
+            transform: rotateY(180deg);
+            padding: 25px;
+            text-align: center;
+        }
+
+        /* 修复警告后的内页标题 */
+        .inside h2 {
+            margin: 0 0 15px 0;
+            font-size: 1.5rem;
+            background: linear-gradient(90deg, #0f3460, var(--secondary-color), #0f3460);
+            background-size: 200% auto;
+            -webkit-background-clip: text; /* 兼容前缀 */
+            background-clip: text;         /* 标准属性 - FIX! */
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+            display: inline-block;
+        }
+
+        .photo-frame {
+            width: 100%;
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background: #000;
+            border-radius: 15px;
+            border: 3px solid #eee;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.4s;
+        }
+
+        .photo-frame:hover {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 25px rgba(0,212,255,0.4);
+        }
+
+        /* 扫描线动画 */
+        .photo-frame::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 6px;
+            background: linear-gradient(to right, transparent, var(--primary-color), transparent);
+            box-shadow: 0 0 20px var(--primary-color);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .back-btn-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 52, 96, 0.9);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            z-index: 100;
+            border: 1px solid var(--primary-color);
+            transition: 0.3s;
+        }
+
+        .back-btn-overlay:hover {
+            background: var(--secondary-color);
+        }
+
+        .photo-placeholder { color: #666; font-style: italic; }
+
+    </style>
+</head>
+<body>
+
+    <div class="gear" style="top: 10%; left: 10%;">⚙️</div>
+    <div class="gear" style="bottom: 15%; right: 10%; font-size: 8rem; opacity: 0.1;">🛠️</div>
+    <div class="gear" style="top: 50%; right: 5%; font-size: 3rem; animation-duration: 10s;">⚙️</div>
+
+    <div class="brochure" id="brochure">
+        <div class="page cover">
+            <div class="robot-icon">🤖</div>
+            <h1>Tidak Tahu Macam Mana Buat Pembentangan?<br>
+                <span style="font-size: 1.1rem; display: block; margin-top: 10px; opacity: 0.8; -webkit-text-fill-color: white;">Jom! Bukalah brosur ni!</span>
+            </h1>
+            <button class="btn-read" onclick="toggleBrochure(event)">TEKAN SINI! 🚀</button>
+        </div>
+
+        <div class="page inside">
+            <h2>Panduan Pembentangan</h2>
+            <div class="photo-frame" onclick="toggleBrochure(event)">
+                <img src="pembentangan.jpg" alt="pembentangan.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div class="photo-placeholder" style="display:none;">
+                    🖼️<br>Sila pastikan fail <b>pembentangan.jpg</b> ada dalam folder yang sama.
+                </div>
+                <div class="back-btn-overlay">← Kembali ke Utama</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const brochure = document.getElementById('brochure');
+
+        // 切换手册打开/关闭状态
+        function toggleBrochure(e) {
+            if (e) e.stopPropagation();
+            brochure.classList.toggle('open');
+            
+            // 翻开时锁定位置，关闭时恢复 3D 跟随
+            if (brochure.classList.contains('open')) {
+                brochure.style.transform = `rotateY(-180deg)`;
+            } else {
+                brochure.style.transform = `rotateY(0deg)`;
+            }
+        }
+
+        // 鼠标跟随 Tilt 特效
+        document.addEventListener('mousemove', (e) => {
+            if (brochure.classList.contains('open')) return;
+
+            const xAxis = (window.innerWidth / 2 - e.pageX) / 25;
+            const yAxis = (window.innerHeight / 2 - e.pageY) / 25;
+            
+            brochure.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+        });
+
+        // 鼠标离开时复位
+        document.addEventListener('mouseleave', () => {
+            if (!brochure.classList.contains('open')) {
+                brochure.style.transform = `rotateY(0deg) rotateX(0deg)`;
+            }
+        });
+    </script>
+</body>
+</html>
